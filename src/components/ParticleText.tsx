@@ -31,7 +31,11 @@ export function ParticleText({
 
     const build = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = canvas.parentElement?.clientWidth ?? 600;
+      const width = Math.round(canvas.parentElement?.clientWidth ?? 0);
+      if (width < 40) {
+        particles = [];
+        return;
+      }
       canvas.width = width * dpr;
       canvas.height = height * dpr;
       canvas.style.width = `${width}px`;
