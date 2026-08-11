@@ -1,0 +1,27 @@
+export const BUILDER_TITLES = [
+  "GOA CODE SURFER",
+  "PIXEL BEACH BUILDER",
+  "COCONUT ARCHITECT",
+  "SUNSET SYSTEMS ENGINEER",
+  "FULL STACK BEACH NOMAD",
+  "DEBUGGING BEACH BUM",
+  "UI SURF RIDER",
+  "CODE & COCONUTS",
+  "TROPICAL TECH BUILDER",
+  "CHAOS ENGINEER",
+  "PRODUCT BEACHCOMBER",
+  "DIGITAL SUNSET MAKER",
+  "MONSOON SHIP CAPTAIN",
+  "LATENCY LIFEGUARD",
+  "SALTWATER SHIPPER",
+  "PALM TREE PROTOTYPER",
+  "LOW-TIDE REFACTORER",
+  "BEACH SHACK HACKER",
+  "SUSEGAD SOFTWARE POET",
+  "HIGH TIDE HACKER",
+] as const;
+
+export function rollTitle(exclude?: string): string {
+  const pool = BUILDER_TITLES.filter((t) => t !== exclude);
+  return pool[Math.floor(Math.random() * pool.length)] ?? BUILDER_TITLES[0];
+}
