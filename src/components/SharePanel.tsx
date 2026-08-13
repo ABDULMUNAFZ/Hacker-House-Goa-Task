@@ -265,17 +265,17 @@ export function SharePanel({
 
             if (action === "share") {
               await copyText(caption);
-              if (canShareFiles(file)) {
-                try {
-                  await shareFile(file, caption);
-                  onNotice("3D Lanyard video shared successfully!");
-                  return;
-                } catch (err) {
-                  if ((err as DOMException)?.name === "AbortError") return;
-                }
+              onNotice("Preparing video preview for X... Please wait a moment.");
+              try {
+                const directUrl = await uploadMedia(blob, fileName);
+                const sharedUrl = `${window.location.origin}/share?video=${encodeURIComponent(directUrl)}&caption=${encodeURIComponent(caption)}`;
+                window.open(buildIntentUrl(caption, sharedUrl), "_blank", "noopener,noreferrer");
+                onNotice("Video uploaded! Just post the link on X to see the media preview!");
+              } catch (err) {
+                console.error(err);
+                toX();
+                onNotice("Upload failed, but we opened X! Download the video below and upload manually.");
               }
-              toX();
-              onNotice("Caption copied! Click 'Save Video (.MP4)' below to download and upload to X!");
             } else {
               onNotice("3D Video is ready! Click 'Save Video (.MP4)' to download.");
             }
@@ -347,17 +347,17 @@ export function SharePanel({
 
           if (action === "share") {
             await copyText(caption);
-            if (canShareFiles(file)) {
-              try {
-                await shareFile(file, caption);
-                onNotice("3D Lanyard video shared successfully!");
-                return;
-              } catch (err) {
-                if ((err as DOMException)?.name === "AbortError") return;
-              }
+            onNotice("Preparing video preview for X... Please wait a moment.");
+            try {
+              const directUrl = await uploadMedia(blob, fileName);
+              const sharedUrl = `${window.location.origin}/share?video=${encodeURIComponent(directUrl)}&caption=${encodeURIComponent(caption)}`;
+              window.open(buildIntentUrl(caption, sharedUrl), "_blank", "noopener,noreferrer");
+              onNotice("Video uploaded! Just post the link on X to see the media preview!");
+            } catch (err) {
+              console.error(err);
+              toX();
+              onNotice("Upload failed, but we opened X! Download the video below and upload manually.");
             }
-            toX();
-            onNotice("Caption copied! Click 'Save Video (.MP4)' below to download and upload to X!");
           } else {
             onNotice("3D Video is ready! Click 'Save Video (.MP4)' to download.");
           }
@@ -382,6 +382,29 @@ export function SharePanel({
     }
   };
 
+  const uploadMedia = async (blob: Blob, name: string): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", blob, name);
+    
+    const res = await fetch("https://tmpfiles.org/api/v1/upload", {
+      method: "POST",
+      body: formData
+    });
+    
+    if (!res.ok) {
+      throw new Error("Upload failed");
+    }
+    
+    const json = await res.json();
+    if (json.status !== "success" || !json.data?.url) {
+      throw new Error("Invalid response from temporary file server.");
+    }
+    
+    const htmlUrl = json.data.url;
+    const directUrl = htmlUrl.replace("tmpfiles.org/", "tmpfiles.org/dl/");
+    return directUrl;
+  };
+
   const shareImageToX = async () => {
     setBusy("share-image");
     try {
@@ -391,15 +414,26 @@ export function SharePanel({
       const filename = fileNameFor(name, format);
       downloadBlob(blob, filename);
 
-      // 2. Copy caption
+      // 2. Upload to temporary file host
+      onNotice("Preparing preview for X... Please wait a moment.");
+      const directUrl = await uploadMedia(blob, filename);
+
+      // 3. Copy caption
       await copyText(caption);
 
-      // 3. Open X intent
-      toX();
+      // 4. Construct intent URL with our share page
+      const sharedUrl = `${window.location.origin}/share?image=${encodeURIComponent(directUrl)}&caption=${encodeURIComponent(caption)}`;
+      
+      // 5. Open X intent
+      const xUrl = buildIntentUrl(caption, sharedUrl);
+      window.open(xUrl, "_blank", "noopener,noreferrer");
 
-      onNotice("Card image downloaded & caption copied! Paste (Cmd/Ctrl + V) and upload on X!");
+      onNotice("Image uploaded! Just post the link on X to see the media preview!");
     } catch (err) {
-      onError("Failed to share image. Please download it and post manually.");
+      console.error(err);
+      await copyText(caption);
+      toX();
+      onNotice("Upload failed, but we opened X! Paste your caption and upload the downloaded image.");
     } finally {
       setBusy(null);
     }
@@ -410,11 +444,30 @@ export function SharePanel({
     await copyText(caption);
 
     if (recordedVideoBlob) {
-      // 2. Download cached video
-      saveVideoBlob(recordedVideoBlob, recordedVideoName);
-      // 3. Open X
-      toX();
-      onNotice("Video downloaded & caption copied! Paste (Cmd/Ctrl + V) and upload on X!");
+      setBusy("share-video");
+      try {
+        // 2. Download cached video
+        saveVideoBlob(recordedVideoBlob, recordedVideoName);
+
+        // 3. Upload to temporary file host
+        onNotice("Preparing video preview for X... Please wait a moment.");
+        const directUrl = await uploadMedia(recordedVideoBlob, recordedVideoName);
+
+        // 4. Construct intent URL
+        const sharedUrl = `${window.location.origin}/share?video=${encodeURIComponent(directUrl)}&caption=${encodeURIComponent(caption)}`;
+
+        // 5. Open X intent
+        const xUrl = buildIntentUrl(caption, sharedUrl);
+        window.open(xUrl, "_blank", "noopener,noreferrer");
+
+        onNotice("Video uploaded! Just post the link on X to see the media preview!");
+      } catch (err) {
+        console.error(err);
+        toX();
+        onNotice("Upload failed, but we opened X! Please upload the downloaded video manually.");
+      } finally {
+        setBusy(null);
+      }
     } else {
       // 2. Trigger recording and automatic workflow on stop
       await recordVideo("share");
@@ -466,7 +519,7 @@ export function SharePanel({
             {recordedVideoBlob ? (
               <button
                 type="button"
-                className="hh-btn hh-btn-primary"
+                className="hh-btn hh-btn-primary animate-pulse"
                 onClick={() => {
                   saveVideoBlob(recordedVideoBlob, recordedVideoName);
                 }}
@@ -489,17 +542,6 @@ export function SharePanel({
                 </span>
               </button>
             )}
-            <button
-              type="button"
-              className="hh-btn hh-btn-pink"
-              onClick={() => recordVideo("share")}
-              disabled={recordingVideo}
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                <Share2 className={`h-4 w-4 ${recordingVideo && recordingMode === "share" ? "animate-pulse text-goa-yellow" : ""}`} aria-hidden="true" />
-                {recordingVideo && recordingMode === "share" ? "Sharing..." : "Share Video"}
-              </span>
-            </button>
           </>
         )}
 
@@ -508,11 +550,11 @@ export function SharePanel({
           type="button"
           className="hh-btn hh-btn-pink"
           onClick={shareImageToX}
-          disabled={busy === "share-image" || recordingVideo}
+          disabled={busy === "share-image" || recordingVideo || busy === "png" || busy === "jpg"}
         >
           <span className="relative z-10 flex items-center gap-2">
             <XLogo className="h-4 w-4" aria-hidden="true" />
-            Share Image to X
+            {busy === "share-image" ? "Uploading..." : "Share Image to X"}
           </span>
         </button>
 
@@ -522,21 +564,14 @@ export function SharePanel({
             type="button"
             className="hh-btn hh-btn-pink"
             onClick={shareVideoToX}
-            disabled={recordingVideo}
+            disabled={recordingVideo || busy === "share-video"}
           >
             <span className="relative z-10 flex items-center gap-2">
               <XLogo className="h-4 w-4" aria-hidden="true" />
-              Share Video to X
+              {busy === "share-video" || (recordingVideo && recordingMode === "share") ? "Processing..." : "Share Video to X"}
             </span>
           </button>
         )}
-
-        <button type="button" className="hh-btn hh-btn-pink" onClick={toX} disabled={recordingVideo}>
-          <span className="relative z-10 flex items-center gap-2">
-            <XLogo className="h-4 w-4" aria-hidden="true" />
-            Take it to X
-          </span>
-        </button>
       </div>
 
       <label htmlFor="hh-caption" className="label-cond mt-6 block text-xs sm:text-sm text-goa-yellow font-semibold tracking-wider">
