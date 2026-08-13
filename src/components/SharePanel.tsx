@@ -61,7 +61,7 @@ export function SharePanel({
     }
   }, []);
 
-  const intentUrl = useMemo(() => buildIntentUrl(caption), [caption]);
+
 
   const makeBlob = async (format: "png" | "jpg") => {
     const canvas = getCanvas();
@@ -600,9 +600,22 @@ export function SharePanel({
         onBlur={() => setCaption((c) => withHashtag(c))}
         className="mt-1 w-full rounded-lg border-2 border-goa-yellow/40 bg-goa-green px-3 py-3 font-body text-base text-goa-cream focus:border-goa-yellow focus:outline-none"
       />
-      <p className="mt-1 font-body text-sm sm:text-base text-goa-cream/70">
+      <p className="mt-1 font-body text-xs text-goa-cream/50">
         #FrameInGoa is always added back before posting.
       </p>
+
+      {/* Primary CTA: Take it to X */}
+      <button
+        type="button"
+        className="mt-4 w-full hh-btn hh-btn-primary flex items-center justify-center gap-3 py-3 text-base sm:text-lg font-bold"
+        onClick={toX}
+        disabled={recordingVideo}
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          <XLogo className="h-5 w-5" aria-hidden="true" />
+          Take it to X
+        </span>
+      </button>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button
@@ -630,19 +643,10 @@ export function SharePanel({
             Start over
           </span>
         </button>
-        <a
-          href={intentUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="label-cond text-[0.58rem] text-goa-cream/70 underline underline-offset-4 hover:text-goa-yellow"
-        >
-          Direct X link
-        </a>
       </div>
 
-      <p className="mt-4 font-body text-xs text-goa-cream/65">
-        X can't attach a local image automatically from a web link. Save your card first, then attach
-        it to the pre-filled post — on phones that support it, “Share image” posts the file directly.
+      <p className="mt-4 font-body text-xs text-goa-cream/50">
+        Save your card first, then click "Take it to X" — your caption, hashtags, and link will be pre-filled. Attach the saved image or video to complete the post.
       </p>
     </div>
   );
