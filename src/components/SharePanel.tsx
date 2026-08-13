@@ -408,27 +408,37 @@ export function SharePanel({
   const shareImageToX = async () => {
     setBusy("share-image");
     try {
-      // 1. Generate and download image
       const format = mode === "pfp" ? "png" : "jpg";
       const blob = await makeBlob(format);
       const filename = fileNameFor(name, format);
+      const file = new File([blob], filename, { type: `image/${format}` });
+
+      // 1. Try Native sharing if supported (e.g. Mobile iOS/Android, macOS Safari)
+      // This natively attaches the file directly inside the X app post composer!
+      if (canShareFiles(file)) {
+        try {
+          await shareFile(file, caption);
+          onNotice("Shared successfully!");
+          return;
+        } catch (err) {
+          if ((err as DOMException)?.name === "AbortError") return;
+        }
+      }
+
+      // 2. Fallback for desktop Chrome/Brave/Firefox:
+      // Download image and copy caption
       downloadBlob(blob, filename);
-
-      // 2. Upload to temporary file host
       onNotice("Preparing preview for X... Please wait a moment.");
+      
+      // Upload to temporary host for rich Twitter Card unfurling
       const directUrl = await uploadMedia(blob, filename);
-
-      // 3. Copy caption
       await copyText(caption);
 
-      // 4. Construct intent URL with our share page
       const sharedUrl = `${window.location.origin}/share?image=${encodeURIComponent(directUrl)}&caption=${encodeURIComponent(caption)}`;
-      
-      // 5. Open X intent
       const xUrl = buildIntentUrl(caption, sharedUrl);
       window.open(xUrl, "_blank", "noopener,noreferrer");
 
-      onNotice("Image uploaded! Just post the link on X to see the media preview!");
+      onNotice("Card image downloaded & caption copied! Just paste (Cmd/Ctrl + V) and upload on X!");
     } catch (err) {
       console.error(err);
       await copyText(caption);
@@ -440,27 +450,34 @@ export function SharePanel({
   };
 
   const shareVideoToX = async () => {
-    // 1. Copy caption
     await copyText(caption);
 
     if (recordedVideoBlob) {
+      const file = new File([recordedVideoBlob], recordedVideoName, { type: "video/mp4" });
+
+      // 1. Try Native sharing if supported
+      if (canShareFiles(file)) {
+        try {
+          await shareFile(file, caption);
+          onNotice("Shared successfully!");
+          return;
+        } catch (err) {
+          if ((err as DOMException)?.name === "AbortError") return;
+        }
+      }
+
+      // 2. Fallback for desktop:
       setBusy("share-video");
       try {
-        // 2. Download cached video
         saveVideoBlob(recordedVideoBlob, recordedVideoName);
-
-        // 3. Upload to temporary file host
         onNotice("Preparing video preview for X... Please wait a moment.");
+        
         const directUrl = await uploadMedia(recordedVideoBlob, recordedVideoName);
-
-        // 4. Construct intent URL
         const sharedUrl = `${window.location.origin}/share?video=${encodeURIComponent(directUrl)}&caption=${encodeURIComponent(caption)}`;
-
-        // 5. Open X intent
         const xUrl = buildIntentUrl(caption, sharedUrl);
         window.open(xUrl, "_blank", "noopener,noreferrer");
 
-        onNotice("Video uploaded! Just post the link on X to see the media preview!");
+        onNotice("Video downloaded & caption copied! Just paste (Cmd/Ctrl + V) and upload on X!");
       } catch (err) {
         console.error(err);
         toX();
@@ -469,7 +486,6 @@ export function SharePanel({
         setBusy(null);
       }
     } else {
-      // 2. Trigger recording and automatic workflow on stop
       await recordVideo("share");
     }
   };
