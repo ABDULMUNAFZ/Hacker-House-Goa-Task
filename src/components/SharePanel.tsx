@@ -264,6 +264,7 @@ export function SharePanel({
             setRecordedVideoName(fileName);
 
             if (action === "share") {
+              await copyText(caption);
               if (canShareFiles(file)) {
                 try {
                   await shareFile(file, caption);
@@ -274,7 +275,7 @@ export function SharePanel({
                 }
               }
               toX();
-              onNotice("File sharing not supported on this browser. Click 'Save Video (.MP4)' below to save your file!");
+              onNotice("Caption copied! Click 'Save Video (.MP4)' below to download and upload to X!");
             } else {
               onNotice("3D Video is ready! Click 'Save Video (.MP4)' to download.");
             }
@@ -345,6 +346,7 @@ export function SharePanel({
           setRecordedVideoName(fileName);
 
           if (action === "share") {
+            await copyText(caption);
             if (canShareFiles(file)) {
               try {
                 await shareFile(file, caption);
@@ -355,7 +357,7 @@ export function SharePanel({
               }
             }
             toX();
-            onNotice("File sharing not supported on this browser. Click 'Save Video (.MP4)' below to save your file!");
+            onNotice("Caption copied! Click 'Save Video (.MP4)' below to download and upload to X!");
           } else {
             onNotice("3D Video is ready! Click 'Save Video (.MP4)' to download.");
           }
@@ -377,6 +379,45 @@ export function SharePanel({
       onError(err instanceof Error ? err.message : "Failed to record WebGL lanyard video.");
     } finally {
       setBusy(null);
+    }
+  };
+
+  const shareImageToX = async () => {
+    setBusy("share-image");
+    try {
+      // 1. Generate and download image
+      const format = mode === "pfp" ? "png" : "jpg";
+      const blob = await makeBlob(format);
+      const filename = fileNameFor(name, format);
+      downloadBlob(blob, filename);
+
+      // 2. Copy caption
+      await copyText(caption);
+
+      // 3. Open X intent
+      toX();
+
+      onNotice("Card image downloaded & caption copied! Paste (Cmd/Ctrl + V) and upload on X!");
+    } catch (err) {
+      onError("Failed to share image. Please download it and post manually.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const shareVideoToX = async () => {
+    // 1. Copy caption
+    await copyText(caption);
+
+    if (recordedVideoBlob) {
+      // 2. Download cached video
+      saveVideoBlob(recordedVideoBlob, recordedVideoName);
+      // 3. Open X
+      toX();
+      onNotice("Video downloaded & caption copied! Paste (Cmd/Ctrl + V) and upload on X!");
+    } else {
+      // 2. Trigger recording and automatic workflow on stop
+      await recordVideo("share");
     }
   };
 
@@ -444,7 +485,7 @@ export function SharePanel({
               >
                 <span className="relative z-10 flex items-center gap-2">
                   <Download className={`h-4 w-4 ${recordingVideo && recordingMode === "download" ? "animate-pulse text-goa-yellow" : ""}`} aria-hidden="true" />
-                  {recordingVideo && recordingMode === "download" ? "Recording..." : "Download Video (MP4)"}
+                  {recordingVideo && recordingMode === "download" ? "Recording..." : "Save Video (.MP4)"}
                 </span>
               </button>
             )}
@@ -462,36 +503,30 @@ export function SharePanel({
           </>
         )}
 
-        {mode === "pfp" && fileShareSupported && (
+        {/* Share Image to X */}
+        <button
+          type="button"
+          className="hh-btn hh-btn-pink"
+          onClick={shareImageToX}
+          disabled={busy === "share-image" || recordingVideo}
+        >
+          <span className="relative z-10 flex items-center gap-2">
+            <XLogo className="h-4 w-4" aria-hidden="true" />
+            Share Image to X
+          </span>
+        </button>
+
+        {/* Share Video to X */}
+        {mode === "builder" && webglCanvas && (
           <button
             type="button"
             className="hh-btn hh-btn-pink"
-            onClick={async () => {
-              setBusy("share");
-              try {
-                const blob = await makeBlob("png");
-                const file = new File([blob], fileNameFor(name, "png"), { type: "image/png" });
-                if (canShareFiles(file)) {
-                  await shareFile(file, caption);
-                } else {
-                  downloadBlob(blob, fileNameFor(name, "png"));
-                  onNotice(
-                    "Your browser can't attach images directly, so we saved your card. Attach it to your X post.",
-                  );
-                  toX();
-                }
-              } catch (err) {
-                if ((err as DOMException)?.name === "AbortError") return;
-                onError("Sharing didn't go through. You can still save the card and post it manually.");
-              } finally {
-                setBusy(null);
-              }
-            }}
-            disabled={busy === "share" || recordingVideo}
+            onClick={shareVideoToX}
+            disabled={recordingVideo}
           >
             <span className="relative z-10 flex items-center gap-2">
-              <Share2 className="h-4 w-4" aria-hidden="true" />
-              Share PFP
+              <XLogo className="h-4 w-4" aria-hidden="true" />
+              Share Video to X
             </span>
           </button>
         )}
