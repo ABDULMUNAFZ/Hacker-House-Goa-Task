@@ -1,4 +1,4 @@
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn } from "@tanstack/start-client-core";
 
 export const uploadMediaServer = createServerFn({ method: "POST" })
   .validator((data: { base64: string; filename: string }) => data)
