@@ -21,8 +21,8 @@ export function PhotoEditor({ transform, onChange, imageSize, frame }: Props) {
 
   return (
     <div className="rounded-xl border-2 border-goa-yellow/40 bg-goa-deep/70 p-4">
-      <p className="label-cond text-[0.6rem] text-goa-yellow">POSITION YOUR PHOTO</p>
-      <p className="mt-1 font-body text-xs text-goa-cream/75">
+      <p className="label-cond text-xs sm:text-sm text-goa-yellow">POSITION YOUR PHOTO</p>
+      <p className="mt-1 font-body text-sm sm:text-base text-goa-cream/75">
         Drag on the card to move. Pinch or scroll to zoom. Nothing gets stretched.
       </p>
 
@@ -58,7 +58,7 @@ export function PhotoEditor({ transform, onChange, imageSize, frame }: Props) {
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
-          className="hh-btn hh-btn-ghost px-4 py-2 text-[0.62rem]"
+          className="hh-btn hh-btn-ghost px-4 py-2 text-xs sm:text-sm"
           onClick={() => onChange({ zoom: 1, x: 0, y: 0 })}
         >
           <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
@@ -66,7 +66,7 @@ export function PhotoEditor({ transform, onChange, imageSize, frame }: Props) {
         </button>
         <button
           type="button"
-          className="hh-btn hh-btn-ghost px-4 py-2 text-[0.62rem]"
+          className="hh-btn hh-btn-ghost px-4 py-2 text-xs sm:text-sm"
           onClick={() => onChange({ zoom: fitZoom(), x: 0, y: 0 })}
         >
           <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -74,7 +74,7 @@ export function PhotoEditor({ transform, onChange, imageSize, frame }: Props) {
         </button>
         <button
           type="button"
-          className="hh-btn hh-btn-ghost px-4 py-2 text-[0.62rem]"
+          className="hh-btn hh-btn-ghost px-4 py-2 text-xs sm:text-sm"
           onClick={() => onChange({ zoom: 1, x: 0, y: 0 })}
         >
           <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />

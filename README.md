@@ -3284,7 +3284,7 @@ It should NOT look like:
 
 or:
 
-"Lovable template"
+"a boilerplate template"
 
 or:
 
@@ -3301,16 +3301,6 @@ The experience should be memorable.
 The generated card should be something a person genuinely wants to post.
 
 Build it.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/79438ee9-7d8e-4a0c-a610-c9413a982074).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 

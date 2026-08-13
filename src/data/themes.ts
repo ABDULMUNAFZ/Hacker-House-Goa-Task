@@ -20,7 +20,7 @@ export const THEMES: Record<ThemeId, CardTheme> = {
     bgDeep: "#004F32",
     ink: "#FFD400",
     accent: "#FF168C",
-    cream: "#FFF8DD",
+    cream: "#fffbe8",
     sun: "#FFD400",
     sea: "#00593B",
   },
@@ -29,7 +29,7 @@ export const THEMES: Record<ThemeId, CardTheme> = {
     label: "BEACH CLUB",
     bg: "#004F32",
     bgDeep: "#00341F",
-    ink: "#FFF8DD",
+    ink: "#fffbe8",
     accent: "#FF168C",
     cream: "#FFD400",
     sun: "#FF168C",
@@ -42,11 +42,10 @@ export const THEMES: Record<ThemeId, CardTheme> = {
     bgDeep: "#F2B900",
     ink: "#004F32",
     accent: "#FF168C",
-    cream: "#FFF8DD",
+    cream: "#fffbe8",
     sun: "#FF168C",
     sea: "#006B3C",
   },
 };
-
 
 export const THEME_LIST = [THEMES.sunset, THEMES.beachclub, THEMES.tropical];

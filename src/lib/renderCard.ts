@@ -15,12 +15,22 @@ import {
 import { drawTracked, fitText, measureTracked } from "./textfit";
 
 export const SERIF = (size: number, weight = 700) =>
-  `${weight} ${size}px "Bodoni Moda", "Times New Roman", serif`;
+  `${weight} ${size}px "Imbue", serif`;
 export const COND = (size: number, weight = 600) =>
-  `${weight} ${size}px "Oswald", "Arial Narrow", sans-serif`;
-export const BODY = (size: number, weight = 500) => `${weight} ${size}px "DM Sans", sans-serif`;
+  `${weight} ${size}px "Imbue", serif`;
+export const BODY = (size: number, weight = 500) => `${weight} ${size}px "Victor Mono", monospace`;
 
 export type PhotoTransform = { zoom: number; x: number; y: number };
+
+let goaLogoImg: HTMLImageElement | null = null;
+let studioLogoImg: HTMLImageElement | null = null;
+if (typeof window !== "undefined") {
+  goaLogoImg = new Image();
+  goaLogoImg.src = "/goa-logo.png";
+  studioLogoImg = new Image();
+  studioLogoImg.src = "/247pm-studio-logo.png";
+}
+
 
 export type CardData = {
   mode: "pfp" | "builder";
@@ -32,7 +42,7 @@ export type CardData = {
 };
 
 export const PFP_SIZE = { w: 1080, h: 1080 };
-export const BUILDER_SIZE = { w: 1080, h: 1350 };
+export const BUILDER_SIZE = { w: 1080, h: 1620 };
 
 export function sizeFor(mode: "pfp" | "builder") {
   return mode === "pfp" ? PFP_SIZE : BUILDER_SIZE;
@@ -246,14 +256,19 @@ function renderBuilder(
   // header
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = th.ink;
-  ctx.font = SERIF(96, 700);
-  ctx.textAlign = "left";
-  ctx.fillText("HH GOA", 72, 172);
-  ctx.font = COND(30, 500);
-  ctx.fillStyle = th.cream;
+  if (studioLogoImg && studioLogoImg.complete && studioLogoImg.naturalWidth !== 0) {
+    // Draw the 2:47PM Studio logo on the left side of the header
+    ctx.drawImage(studioLogoImg, 72, 106, 210, 56);
+  } else {
+    ctx.font = SERIF(96, 700);
+    ctx.textAlign = "left";
+    ctx.fillText("HH GOA", 72, 172);
+  }
+  ctx.font = COND(34, 600);
+  ctx.fillStyle = data.theme === "tropical" ? th.ink : th.cream;
   ctx.textAlign = "right";
   drawTracked(ctx, "BUILDERS OF THE HOUSE", w - 72, 126, 5, "right");
-  ctx.font = SERIF(56, 400);
+  ctx.font = SERIF(64, 400);
   ctx.fillStyle = th.accent;
   drawTracked(ctx, "2026", w - 72, 180, 6, "right");
 
@@ -268,7 +283,7 @@ function renderBuilder(
   const px = 84;
   const py = 250;
   const pw = w - 168;
-  const ph = 620;
+  const ph = 780;
   ctx.save();
   ctx.fillStyle = th.accent;
   roundRectPath(ctx, px + 18, py + 20, pw, ph, 26);
@@ -296,6 +311,26 @@ function renderBuilder(
   ctx.stroke();
   ctx.restore();
 
+  // Rotated Goa logo sticker attached between photo frame and outer border on the right (opposite the name)
+  if (goaLogoImg && goaLogoImg.complete && goaLogoImg.naturalWidth !== 0) {
+    ctx.save();
+    const stickerX = px + pw;
+    const stickerY = py + ph - 120; // Bottom-right of the photo frame, opposite the bottom-left name
+    
+    ctx.translate(stickerX, stickerY);
+    ctx.rotate(0.12); // Tilted for organic badge sticker effect
+    
+    // Shadow under the sticker for realism
+    ctx.shadowColor = "rgba(0, 0, 0, 0.25)";
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetX = 4;
+    ctx.shadowOffsetY = 4;
+    
+    // Draw the actual Goa logo directly onto the card (without white backing)
+    ctx.drawImage(goaLogoImg, -55, -55, 110, 110);
+    ctx.restore();
+  }
+
   // title chip on photo edge
   const chipText = (data.title || "GOA BUILDER").toUpperCase();
   ctx.font = COND(34, 600);
@@ -312,13 +347,15 @@ function renderBuilder(
   drawTracked(ctx, chipText, 28, 42, 5, "left");
   ctx.restore();
 
-  // name (auto-fitting, never overflows)
+  // name (auto-fitting, never overflows, dynamically calculated positioning to prevent overlaps)
+  let currentY = 1055;
+
   const name = (data.name.trim() || "YOUR NAME").toUpperCase();
   const nameFit = fitText(ctx, name, {
     maxWidth: w - 168,
-    maxHeight: 232,
+    maxHeight: 220,
     maxLines: 3,
-    maxFontSize: 118,
+    maxFontSize: 126, // Increased max name font size
     minFontSize: 40,
     lineHeightRatio: 0.94,
     font: (s) => SERIF(s, 700),
@@ -326,29 +363,31 @@ function renderBuilder(
   ctx.fillStyle = th.ink;
   ctx.textAlign = "left";
   ctx.font = SERIF(nameFit.fontSize, 700);
-  let ny = 942 + nameFit.fontSize * 0.78;
   for (const line of nameFit.lines) {
-    ctx.fillText(line, 84, ny);
-    ny += nameFit.lineHeight;
+    currentY += nameFit.fontSize * 0.82;
+    ctx.fillText(line, 84, currentY);
+    currentY += nameFit.fontSize * 0.12;
   }
 
-  // role
+  // role (contrast aligned according to theme background)
   const role = (data.role.trim() || "BUILDER").toUpperCase();
   const roleFit = fitText(ctx, role, {
     maxWidth: w - 168,
     maxHeight: 90,
     maxLines: 2,
-    maxFontSize: 46,
+    maxFontSize: 52, // Increased max role font size
     minFontSize: 22,
     lineHeightRatio: 1.1,
     font: (s) => COND(s, 500),
   });
-  ctx.fillStyle = th.cream;
-  let ry = Math.min(ny + 22, 1186);
+  ctx.fillStyle = data.theme === "tropical" ? th.ink : th.cream;
   ctx.font = COND(roleFit.fontSize, 500);
+  
+  currentY += 28; // Spacing before role
   for (const line of roleFit.lines) {
-    drawTracked(ctx, line, 84, ry, 4, "left");
-    ry += roleFit.lineHeight;
+    currentY += roleFit.fontSize * 0.9;
+    drawTracked(ctx, line, 84, currentY, 4, "left");
+    currentY += roleFit.fontSize * 0.2;
   }
 
   // vibe
@@ -357,17 +396,19 @@ function renderBuilder(
       maxWidth: w - 200,
       maxHeight: 70,
       maxLines: 2,
-      maxFontSize: 30,
+      maxFontSize: 34, // Increased max vibe font size
       minFontSize: 18,
       lineHeightRatio: 1.25,
       font: (s) => BODY(s, 400),
     });
     ctx.fillStyle = th.ink;
     ctx.font = BODY(vibeFit.fontSize, 400);
-    let vy = Math.min(ry + 10, 1244);
+    
+    currentY += 20; // Spacing before vibe
     for (const line of vibeFit.lines) {
-      ctx.fillText(line, 84, vy);
-      vy += vibeFit.lineHeight;
+      currentY += vibeFit.fontSize * 1.0;
+      ctx.fillText(line, 84, currentY);
+      currentY += vibeFit.fontSize * 0.25;
     }
   }
 
@@ -379,14 +420,14 @@ function renderBuilder(
   ctx.lineTo(w - 72, h - 108);
   ctx.stroke();
 
-  ctx.font = COND(28, 500);
-  ctx.fillStyle = th.cream;
+  ctx.font = COND(32, 600);
+  ctx.fillStyle = data.theme === "tropical" ? th.ink : th.cream;
   ctx.textAlign = "left";
   drawTracked(ctx, "GOA, INDIA", 84, h - 62, 5, "left");
   ctx.fillStyle = th.ink;
   drawTracked(ctx, "28–31 OCT 2026", w / 2 - 90, h - 62, 5, "left");
-  ctx.fillStyle = th.accent === th.bg ? th.cream : th.accent;
-  ctx.font = COND(30, 600);
+  ctx.fillStyle = th.accent === th.bg ? (data.theme === "tropical" ? th.ink : th.cream) : th.accent;
+  ctx.font = COND(34, 700);
   drawTracked(ctx, "#FRAMEINGOA", w - 84, h - 62, 5, "right");
 
   drawGrain(ctx, w, h, 0.05);

@@ -3,7 +3,9 @@ import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { Generator } from "@/components/Generator";
 import { HowItWorks } from "@/components/HowItWorks";
+import { TeamSection } from "@/components/TeamSection";
 import { Footer } from "@/components/Footer";
+import ScrambledText from "@/components/ScrambledText";
 
 const TITLE = "HH Goa 2026 — Frame Your Goa";
 const DESC =
@@ -34,15 +36,18 @@ function Index() {
       <Navbar />
       <main>
         <Hero />
-        <Generator />
+        <div className="bg-goa-cream text-goa-ink relative">
+          <Generator />
+        </div>
         <HowItWorks />
-        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+        <TeamSection />
+        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 text-center">
           <p className="display-xl text-4xl text-goa-cream sm:text-6xl">
-            MAKE SOMETHING
+            <span>MAKE SOMETHING</span>
             <br />
             <span className="text-goa-yellow">WORTH SHARING.</span>
           </p>
-          <p className="mt-4 max-w-lg font-body text-sm text-goa-cream/80">
+          <p className="mt-4 max-w-lg mx-auto font-body text-sm text-goa-cream/80">
             Your photo is processed locally in your browser whenever possible. Nothing is uploaded,
             stored, or analysed — no accounts, no face recognition, no tracking of your image.
           </p>

@@ -72,14 +72,14 @@ export function Lanyard({ children, replayKey }: { children: ReactNode; replayKe
           className="h-24 w-40 shrink-0 sm:h-28 sm:w-48"
           aria-hidden="true"
         >
-          <path d="M14 0 L96 132 L124 132 L206 0" fill="none" stroke="#004F32" strokeWidth="26" />
-          <path d="M14 0 L96 132 L124 132 L206 0" fill="none" stroke="#FFD400" strokeWidth="18" />
-          <g fontFamily="Oswald, sans-serif" fontSize="15" fill="#004F32" letterSpacing="3">
+          <path d="M14 0 L96 132 L124 132 L206 0" fill="none" stroke="#05331c" strokeWidth="26" />
+          <path d="M14 0 L96 132 L124 132 L206 0" fill="none" stroke="#fee101" strokeWidth="18" />
+          <g fontFamily="Imbue, serif" fontSize="15" fill="#05331c" letterSpacing="3">
             <text transform="translate(46 52) rotate(58)">HH GOA</text>
             <text transform="translate(176 52) rotate(-58)">2026</text>
           </g>
           <rect x="92" y="126" width="36" height="26" rx="6" fill="#FF168C" />
-          <rect x="86" y="146" width="48" height="18" rx="7" fill="#FFF8DD" />
+          <image href="/goa-logo.png" x="85" y="126" width="50" height="38" />
         </svg>
 
         <motion.div

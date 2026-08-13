@@ -42,21 +42,21 @@
   --color-goa-pink: var(--goa-pink);
   --color-goa-cream: var(--goa-cream);
   --color-goa-black: var(--goa-black);
-  --font-display: "Bodoni Moda", "Times New Roman", serif;
-  --font-cond: "Oswald", "Arial Narrow", sans-serif;
-  --font-body: "DM Sans", system-ui, sans-serif;
+  --font-display: "Imbue", serif;
+  --font-cond: "Imbue", serif;
+  --font-body: "Victor Mono", monospace;
 }
 
 :root {
   --radius: 0.5rem;
 
-  --goa-green: oklch(0.47 0.116 158.2);
-  --goa-deep: oklch(0.38 0.096 159.4);
-  --goa-ink: oklch(0.29 0.074 160);
-  --goa-yellow: oklch(0.88 0.174 96.1);
-  --goa-pink: oklch(0.62 0.28 3.5);
-  --goa-cream: oklch(0.976 0.036 96.6);
-  --goa-black: oklch(0.19 0 0);
+  --goa-green: #0b6839;
+  --goa-deep: #08542e;
+  --goa-ink: #05331c;
+  --goa-yellow: #fee101;
+  --goa-pink: #ff0080;
+  --goa-cream: #fffbe8;
+  --goa-black: #000000;
 
   --background: var(--goa-green);
   --foreground: var(--goa-cream);
@@ -153,25 +153,49 @@
   mix-blend-mode: overlay;
 }
 
-@utility hh-btn {
+.hh-btn {
   font-family: var(--font-cond);
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  font-weight: 600;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
-  padding: 0.85rem 1.5rem;
+  padding: 0.85rem 1.75rem;
   border-radius: 999px;
   border: 2px solid transparent;
-  transition:
-    transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    background-color 160ms ease,
-    color 160ms ease,
-    box-shadow 160ms ease;
+  position: relative;
+  overflow: hidden;
+  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1), color 0.4s cubic-bezier(0.3, 1, 0.2, 1), border-color 0.4s cubic-bezier(0.3, 1, 0.2, 1), box-shadow 0.4s cubic-bezier(0.3, 1, 0.2, 1);
   cursor: pointer;
-  min-height: 48px;
+  min-height: 50px;
+  z-index: 1;
+}
+
+.btn-txt {
+  z-index: 2;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.hh-btn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  border-radius: 999px;
+  transform: translateX(-101%);
+  transition: transform 0.4s cubic-bezier(0.3, 1, 0.2, 1);
+  z-index: -1;
+  will-change: transform;
+}
+
+.hh-btn:hover::after {
+  transform: translateX(0);
 }
 
 .hh-btn:active {
@@ -183,34 +207,52 @@
   cursor: not-allowed;
 }
 
-@utility hh-btn-primary {
-  background: var(--color-goa-yellow);
-  color: var(--color-goa-ink);
-  box-shadow: 0 8px 0 -2px oklch(0.29 0.074 160);
+.hh-btn-primary {
+  background-color: #ff0080;
+  color: #ffffff;
+  border: 2px solid #ff0080;
+}
+
+.hh-btn-primary::after {
+  background-color: #ffffff;
 }
 
 .hh-btn-primary:hover {
-  background: var(--color-goa-cream);
+  color: #ff0080;
+  border-color: #ffffff;
+  box-shadow: 1px 1px 30px rgba(255, 255, 255, 0.4);
 }
 
-@utility hh-btn-pink {
-  background: var(--color-goa-pink);
-  color: var(--color-goa-cream);
-  box-shadow: 0 8px 0 -2px oklch(0.29 0.074 160);
+.hh-btn-pink {
+  background-color: transparent;
+  color: #ff0080;
+  border: 2px solid #ff0080;
+}
+
+.hh-btn-pink::after {
+  background-color: #ff0080;
 }
 
 .hh-btn-pink:hover {
-  filter: brightness(1.08);
+  color: #ffffff;
+  border-color: #ff0080;
+  box-shadow: 1px 1px 30px rgba(255, 0, 128, 0.4);
 }
 
-@utility hh-btn-ghost {
-  background: transparent;
-  color: var(--color-goa-cream);
-  border-color: var(--color-goa-yellow);
+.hh-btn-ghost {
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+}
+
+.hh-btn-ghost::after {
+  background-color: #ff0080;
 }
 
 .hh-btn-ghost:hover {
-  background: oklch(0.88 0.174 96.1 / 14%);
+  color: #ffffff;
+  border-color: #ff0080;
+  box-shadow: 1px 1px 30px rgba(255, 0, 128, 0.4);
 }
 
 @utility ticker {
@@ -224,4 +266,33 @@
   to {
     transform: translateX(-50%);
   }
+}
+
+.text-poster-shadow {
+  text-shadow: 1px 1.5px 0px rgba(0, 0, 0, 0.4);
+}
+
+.text-tall-display {
+  transform: scaleY(1.15);
+  display: inline-block;
+  transform-origin: center;
+}
+
+@media (min-width: 1024px) {
+  .text-poster-shadow {
+    text-shadow: 2px 2.5px 0px rgba(0, 0, 0, 0.45);
+  }
+}
+
+@keyframes hh-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-float {
+  animation: hh-float 3s ease-in-out infinite;
 }

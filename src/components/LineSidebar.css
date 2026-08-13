@@ -1,0 +1,102 @@
+.line-sidebar {
+  --accent-color: #fee101;
+  --text-color: #ebd29d;
+  --marker-color: #0b6839;
+  --marker-length: 45px;
+  --marker-gap: 8px;
+  --tick-scale: 0.4;
+  --max-shift: 15px;
+  --item-gap: 16px;
+  --font-size: 0.9rem;
+  --smoothing: 120ms;
+
+  position: fixed;
+  right: 25px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: auto;
+}
+
+.line-sidebar--markers {
+  padding-right: calc(var(--marker-length) + var(--marker-gap));
+}
+
+.line-sidebar__list {
+  list-style: none;
+  margin: 0;
+  padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--item-gap);
+}
+
+.line-sidebar__item {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.line-sidebar__item::before {
+  content: '';
+  position: absolute;
+  inset: -6px -24px;
+}
+
+.line-sidebar__label {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  font-size: var(--font-size);
+  line-height: 1.2;
+  font-family: "Victor Mono", monospace;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--text-color));
+  transform: translateX(calc(-1 * var(--effect, 0) * var(--max-shift)));
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.line-sidebar__index {
+  margin-right: 0.5rem;
+  font-size: 0.8em;
+  opacity: calc(0.45 + var(--effect, 0) * 0.55);
+}
+
+.line-sidebar__marker {
+  position: absolute;
+  top: 50%;
+  right: calc(-1 * var(--marker-length) - var(--marker-gap));
+  height: 2px;
+  width: var(--marker-length);
+  background-color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--marker-color));
+  transform-origin: right center;
+  transform: translateY(-50%) scaleX(calc(0.6 + var(--effect, 0) * 0.6));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Short static tick centered in the gap between two menu items */
+.line-sidebar--markers .line-sidebar__item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: calc(100% + var(--item-gap) / 2);
+  right: calc(-1 * var(--marker-length) - var(--marker-gap));
+  height: 2px;
+  width: calc(var(--marker-length) * var(--tick-scale));
+  background-color: var(--marker-color);
+  opacity: 0.4;
+  transform: translateY(-50%);
+}
+
+/* When enabled, the in-between ticks grow with cursor proximity too */
+.line-sidebar--scale-tick .line-sidebar__item:not(:last-child)::after {
+  transform-origin: right center;
+  transform: translateY(-50%) scaleX(calc(0.6 + var(--effect, 0) * 0.7));
+}

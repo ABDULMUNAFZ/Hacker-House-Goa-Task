@@ -1,20 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { toast } from "sonner";
-import { Sparkles } from "lucide-react";
 import { UploadZone } from "./UploadZone";
+import ScrambledText from "./ScrambledText";
 import { CameraCapture } from "./CameraCapture";
 import { PhotoEditor } from "./PhotoEditor";
 import { FormatSelector } from "./FormatSelector";
 import { BuilderForm } from "./BuilderForm";
 import { CardCanvas, type CardImage } from "./CardCanvas";
-import { Lanyard } from "./Lanyard";
 import { SharePanel } from "./SharePanel";
 import { rollTitle } from "@/data/titles";
 import type { ThemeId } from "@/data/themes";
 import { ImageError, loadImageFile, normalizeImage } from "@/lib/imageProcessing";
 import { sizeFor, type CardData, type PhotoTransform } from "@/lib/renderCard";
 
-const GEN_STEPS = ["PHOTO", "TYPE", "DESIGN", "GOA"];
+const Lanyard3D = lazy(() => import("./Lanyard3D"));
 
 export function Generator() {
   const [mode, setMode] = useState<"pfp" | "builder">("builder");
@@ -29,16 +28,44 @@ export function Generator() {
   const [transform, setTransform] = useState<PhotoTransform>({ zoom: 1, x: 0, y: 0 });
   const [loading, setLoading] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [genStep, setGenStep] = useState(0);
-  const [generated, setGenerated] = useState(false);
-  const [replayKey, setReplayKey] = useState("0");
+  
+  // Dynamic Canvas references for live 3D texturing
+  const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(null);
+  const [webglCanvas, setWebglCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
 
-  const previewCanvas = useRef<HTMLCanvasElement | null>(null);
-  const finalCanvas = useRef<HTMLCanvasElement | null>(null);
-
-  // Roll the first title on the client only (keeps SSR markup stable).
+  // Roll the first title on the client only
   useEffect(() => setTitle(rollTitle()), []);
+
+  // Intercept all uncaught errors, promise rejections, and console errors to display on-screen for diagnostic verification
+  useEffect(() => {
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      const msg = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+      // Filter for actionable errors related to React, R3F, Rapier, or canvas capturing
+      if (msg.includes('error') || msg.includes('fail') || msg.includes('WebGL') || msg.includes('Three') || msg.includes('Rapier') || msg.includes('joint')) {
+        toast.error(`Console Error: ${msg.substring(0, 150)}...`, { duration: 8000 });
+      }
+      originalConsoleError.apply(console, args);
+    };
+    
+    const handleError = (e: ErrorEvent) => {
+      toast.error(`Runtime Error: ${e.message} at ${e.filename}:${e.lineno}`, { duration: 8000 });
+    };
+    
+    const handleRejection = (e: PromiseRejectionEvent) => {
+      toast.error(`Unhandled Rejection: ${e.reason?.message || e.reason}`, { duration: 8000 });
+    };
+    
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleRejection);
+    
+    return () => {
+      console.error = originalConsoleError;
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, []);
 
   useEffect(() => () => {
     if (objectUrl) URL.revokeObjectURL(objectUrl);
@@ -62,8 +89,7 @@ export function Generator() {
         setImage(normalized as CardImage);
         setImageSize({ w: normalized.width, h: normalized.height });
         setTransform({ zoom: 1, x: 0, y: 0 });
-        setGenerated(false);
-        toast.success("Photo loaded. Position it however you like.");
+        toast.success("Photo loaded! Watch it update live in 3D.");
       } catch (err) {
         toast.error(
           err instanceof ImageError
@@ -77,25 +103,6 @@ export function Generator() {
     [],
   );
 
-  const generate = async () => {
-    if (!image) {
-      toast.error("Add a photo first — then we'll make it Goa.");
-      return;
-    }
-    setGenerating(true);
-    setGenStep(0);
-    for (let i = 0; i < GEN_STEPS.length; i++) {
-      setGenStep(i);
-      await new Promise((r) => setTimeout(r, 180));
-    }
-    setGenerating(false);
-    setGenerated(true);
-    setReplayKey(String(Date.now()));
-    requestAnimationFrame(() => {
-      document.getElementById("result")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  };
-
   const reset = () => {
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     setObjectUrl(null);
@@ -106,47 +113,49 @@ export function Generator() {
     setRole("");
     setVibe("");
     setTitle(rollTitle());
-    setGenerated(false);
-    finalCanvas.current = null;
     document.getElementById("create")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const frame = sizeFor(mode);
 
   return (
-    <section id="create" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h2 className="display-xl text-5xl text-goa-yellow sm:text-7xl">
-          BUILD YOUR
+    <section id="create" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 relative z-20 pointer-events-none">
+      <div className="flex flex-col items-start gap-2 pointer-events-auto">
+        <h2 className="display-xl text-5xl text-goa-ink sm:text-7xl leading-[0.9]">
+          <ScrambledText radius={150} duration={1.5} scrambleChars="HHGOA">
+            BUILD YOUR
+          </ScrambledText>
           <br />
-          <span className="text-goa-cream">GOA IDENTITY.</span>
+          <ScrambledText radius={150} duration={1.5} scrambleChars="HHGOA" className="text-goa-pink">
+            GOA IDENTITY.
+          </ScrambledText>
         </h2>
-        <p className="label-cond max-w-xs text-[0.6rem] text-goa-cream/75">
+        <p className="label-cond text-[0.68rem] text-goa-ink/75 tracking-[0.2em] font-semibold mt-2">
           NO LOGIN. NO SIGNUP. EVERYTHING HAPPENS IN YOUR BROWSER.
         </p>
       </div>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_minmax(320px,460px)] lg:items-start">
-        <div className="space-y-6">
+        {/* Left Side: Creation Controls */}
+        <div className="relative z-30 space-y-6 pointer-events-auto bg-goa-deep border-4 border-goa-ink rounded-3xl p-6 sm:p-8 shadow-xl">
           {!image ? (
             <UploadZone onFile={handleFile} onSelfie={() => setCameraOpen(true)} busy={loading} />
           ) : (
-            <div className="flex flex-wrap items-center gap-3 rounded-xl border-2 border-goa-yellow/40 bg-goa-deep/70 p-3">
-              <span className="label-cond text-[0.58rem] text-goa-yellow">PHOTO LOADED</span>
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-goa-yellow/40 bg-goa-deep/70 p-3">
+              <span className="label-cond text-xs sm:text-sm text-goa-yellow font-semibold tracking-wider">PHOTO LOADED</span>
               <button
                 type="button"
-                className="hh-btn hh-btn-ghost px-4 py-2 text-[0.6rem]"
+                className="hh-btn hh-btn-ghost px-4 py-2 text-xs sm:text-sm"
                 onClick={() => {
                   setImage(null);
                   setImageSize(null);
-                  setGenerated(false);
                 }}
               >
                 Change photo
               </button>
               <button
                 type="button"
-                className="hh-btn hh-btn-ghost px-4 py-2 text-[0.6rem]"
+                className="hh-btn hh-btn-ghost px-4 py-2 text-xs sm:text-sm"
                 onClick={() => setCameraOpen(true)}
               >
                 Retake selfie
@@ -175,81 +184,74 @@ export function Generator() {
             onVibe={setVibe}
             onRoll={() => setTitle((t) => rollTitle(t))}
           />
-
-          <button type="button" className="hh-btn hh-btn-pink w-full text-sm" onClick={generate}>
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
-            {generated ? "Rebuild my card" : "Make it Goa"}
-          </button>
         </div>
 
-        <div className="lg:sticky lg:top-24">
-          <p className="label-cond text-[0.58rem] text-goa-yellow">LIVE PREVIEW</p>
-          <div className="mt-2 rounded-2xl border-4 border-goa-yellow/50 bg-goa-deep p-2">
-            <CardCanvas
-              data={data}
-              image={image}
-              transform={transform}
-              interactive
-              onTransformChange={setTransform}
-              onCanvas={(c) => (previewCanvas.current = c)}
-              onError={(m) => toast.error(m)}
-              className="w-full cursor-grab rounded-lg active:cursor-grabbing"
-            />
+        {/* Right Side: Layout Spacing Placeholder */}
+        <div className="lg:sticky lg:top-24 space-y-4 pointer-events-none relative z-30">
+          {/* On mobile, we render Lanyard3D inline right here. On desktop, Lanyard3D renders in the absolute background of this section, and this slot is just a spacer to prevent layout overlap */}
+          <div className="lg:h-[420px] w-full pointer-events-none">
+            <div className="hidden lg:block lg:h-[420px]" />
+            <div className="block lg:hidden pointer-events-auto">
+              <Suspense fallback={<div className="relative w-full h-[450px] flex justify-center items-center bg-goa-deep/10 rounded-2xl border border-goa-yellow/10" />}>
+                <Lanyard3D
+                  id="lanyard-3d-canvas-mobile"
+                  canvas={canvasElement}
+                  onWebGLCanvas={setWebglCanvas}
+                  theme={theme}
+                  mode={mode}
+                  isRecording={isRecording}
+                />
+              </Suspense>
+            </div>
           </div>
-          <p className="mt-2 font-body text-xs text-goa-cream/65">
-            This is exactly what gets exported — {frame.w} × {frame.h}px, no website UI.
-          </p>
+          
+          <div className="pointer-events-auto">
+            {image ? (
+              <SharePanel
+                getCanvas={() => canvasElement}
+                webglCanvas={webglCanvas}
+                name={name}
+                mode={mode}
+                onRecordingChange={setIsRecording}
+                onError={(m) => toast.error(m)}
+                onNotice={(m) => toast(m)}
+                onReset={reset}
+              />
+            ) : (
+              <div className="rounded-2xl border border-[#05331c]/20 bg-white/60 p-5 text-center shadow-md">
+                <p className="font-body text-xs text-[#05331c]/70">
+                  Upload a photo on the left to view your card in 3D and unlock downloads!
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {generating && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed inset-0 z-[90] flex flex-col items-center justify-center bg-goa-deep/95 px-6"
-        >
-          <p className="display-xl text-4xl text-goa-yellow sm:text-6xl">BUILDING YOUR GOA ID…</p>
-          <div className="mt-6 flex flex-wrap justify-center gap-4">
-            {GEN_STEPS.map((s, i) => (
-              <span
-                key={s}
-                className={`label-cond text-sm transition-colors ${
-                  i <= genStep ? "text-goa-pink" : "text-goa-cream/35"
-                }`}
-              >
-                {s}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* On desktop, we render the Lanyard3D absolute inside this relative container so it hangs from the top edge of the section and can be dragged anywhere inside it */}
+      <div className="hidden lg:block">
+        <Suspense fallback={null}>
+          <Lanyard3D
+            id="lanyard-3d-canvas-desktop"
+            canvas={canvasElement}
+            onWebGLCanvas={setWebglCanvas}
+            theme={theme}
+            mode={mode}
+            isRecording={isRecording}
+          />
+        </Suspense>
+      </div>
 
-      {generated && (
-        <div id="result" className="mt-16 scroll-mt-24">
-          <p className="display-xl text-center text-4xl text-goa-yellow sm:text-6xl">
-            YOUR GOA ID IS READY.
-          </p>
-          <div className="mt-6 grid gap-10 lg:grid-cols-[minmax(300px,460px)_1fr] lg:items-start">
-            <Lanyard replayKey={replayKey}>
-              <CardCanvas
-                data={data}
-                image={image}
-                transform={transform}
-                onCanvas={(c) => (finalCanvas.current = c)}
-                onError={(m) => toast.error(m)}
-                className="w-full rounded-[10px]"
-              />
-            </Lanyard>
-            <SharePanel
-              getCanvas={() => finalCanvas.current ?? previewCanvas.current}
-              name={name}
-              onError={(m) => toast.error(m)}
-              onNotice={(m) => toast(m)}
-              onReset={reset}
-            />
-          </div>
-        </div>
-      )}
+      {/* Hidden 2D card canvas used to drive the 3D lanyard texture atlas in real-time */}
+      <div className="absolute pointer-events-none opacity-0 -z-50" style={{ left: "-9999px", top: "-9999px" }}>
+        <CardCanvas
+          data={data}
+          image={image}
+          transform={transform}
+          onCanvas={setCanvasElement}
+          onError={(m) => toast.error(m)}
+        />
+      </div>
 
       <CameraCapture
         open={cameraOpen}

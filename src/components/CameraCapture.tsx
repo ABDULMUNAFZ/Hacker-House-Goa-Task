@@ -88,7 +88,7 @@ export function CameraCapture({ open, onClose, onCapture, onError }: Props) {
       role="dialog"
       aria-modal="true"
       aria-label="Take a selfie"
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-goa-black/80 p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-goa-black/80 p-4 pointer-events-auto"
     >
       <div className="grain w-full max-w-md rounded-2xl border-4 border-goa-yellow bg-goa-deep p-4">
         <div className="flex items-center justify-between">

@@ -11,7 +11,7 @@ export function FormatSelector({ mode, onMode, theme, onTheme }: Props) {
   return (
     <div className="space-y-4">
       <fieldset>
-        <legend className="label-cond text-[0.6rem] text-goa-yellow">CHOOSE YOUR FORMAT</legend>
+        <legend className="label-cond text-xs sm:text-sm text-goa-yellow">CHOOSE YOUR FORMAT</legend>
         <div className="mt-2 grid grid-cols-2 gap-3">
           {(
             [
@@ -40,12 +40,12 @@ export function FormatSelector({ mode, onMode, theme, onTheme }: Props) {
                     } ${active ? "border-goa-cream" : "border-goa-yellow"}`}
                   />
                   <span
-                    className={`label-cond text-[0.6rem] ${active ? "text-goa-cream" : "text-goa-yellow"}`}
+                    className={`label-cond text-xs sm:text-base font-semibold ${active ? "text-goa-cream" : "text-goa-yellow"}`}
                   >
                     {f.title}
                   </span>
                 </span>
-                <span className="mt-1 block font-body text-[0.65rem] text-goa-cream/75">{f.sub}</span>
+                <span className="mt-1 block font-body text-xs sm:text-sm text-goa-cream/75">{f.sub}</span>
                 {active && <span className="sr-only">Selected</span>}
               </button>
             );
@@ -54,7 +54,7 @@ export function FormatSelector({ mode, onMode, theme, onTheme }: Props) {
       </fieldset>
 
       <fieldset>
-        <legend className="label-cond text-[0.6rem] text-goa-yellow">PICK A COMPOSITION</legend>
+        <legend className="label-cond text-xs sm:text-sm text-goa-yellow">PICK A COMPOSITION</legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {THEME_LIST.map((t) => {
             const active = theme === t.id;
@@ -64,7 +64,7 @@ export function FormatSelector({ mode, onMode, theme, onTheme }: Props) {
                 type="button"
                 aria-pressed={active}
                 onClick={() => onTheme(t.id)}
-                className={`label-cond rounded-full border-2 px-3 py-2 text-[0.55rem] transition-colors ${
+                className={`label-cond rounded-full border-2 px-3 py-2 text-xs sm:text-sm font-semibold transition-colors ${
                   active
                     ? "border-goa-yellow bg-goa-yellow text-goa-ink"
                     : "border-goa-cream/35 text-goa-cream hover:border-goa-yellow"
