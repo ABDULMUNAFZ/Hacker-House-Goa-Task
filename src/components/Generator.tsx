@@ -37,35 +37,7 @@ export function Generator() {
   // Roll the first title on the client only
   useEffect(() => setTitle(rollTitle()), []);
 
-  // Intercept all uncaught errors, promise rejections, and console errors to display on-screen for diagnostic verification
-  useEffect(() => {
-    const originalConsoleError = console.error;
-    console.error = (...args) => {
-      const msg = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
-      // Filter for actionable errors related to React, R3F, Rapier, or canvas capturing
-      if (msg.includes('error') || msg.includes('fail') || msg.includes('WebGL') || msg.includes('Three') || msg.includes('Rapier') || msg.includes('joint')) {
-        toast.error(`Console Error: ${msg.substring(0, 150)}...`, { duration: 8000 });
-      }
-      originalConsoleError.apply(console, args);
-    };
-    
-    const handleError = (e: ErrorEvent) => {
-      toast.error(`Runtime Error: ${e.message} at ${e.filename}:${e.lineno}`, { duration: 8000 });
-    };
-    
-    const handleRejection = (e: PromiseRejectionEvent) => {
-      toast.error(`Unhandled Rejection: ${e.reason?.message || e.reason}`, { duration: 8000 });
-    };
-    
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleRejection);
-    
-    return () => {
-      console.error = originalConsoleError;
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleRejection);
-    };
-  }, []);
+
 
   useEffect(() => () => {
     if (objectUrl) URL.revokeObjectURL(objectUrl);

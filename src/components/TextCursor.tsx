@@ -125,6 +125,14 @@ const TextCursor: FC<TextCursorProps> = ({
   }, []);
 
   useEffect(() => {
+    const handleScroll = () => {
+      setTrail([]);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       if (Date.now() - lastMoveTimeRef.current > 100) {
         setTrail(prev => (prev.length > 0 ? prev.slice(1) : prev));

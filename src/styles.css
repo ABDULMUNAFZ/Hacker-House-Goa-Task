@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Imbue:opsz,wght@10..100,100..900&family=Victor+Mono:ital,wght@0,100..700;1,100..700&display=swap');
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -42,8 +43,8 @@
   --color-goa-pink: var(--goa-pink);
   --color-goa-cream: var(--goa-cream);
   --color-goa-black: var(--goa-black);
-  --font-display: "Imbue", serif;
-  --font-cond: "Imbue", serif;
+  --font-display: "Imbue", "Impact", "Arial Narrow", sans-serif;
+  --font-cond: "Imbue", "Impact", "Arial Narrow", sans-serif;
   --font-body: "Victor Mono", monospace;
 }
 
