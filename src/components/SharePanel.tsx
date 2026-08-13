@@ -273,8 +273,8 @@ export function SharePanel({
                   if ((err as DOMException)?.name === "AbortError") return;
                 }
               }
-              await saveVideoBlob(blob, fileName);
               toX();
+              onNotice("File sharing not supported on this browser. Click 'Save Video (.MP4)' below to save your file!");
             } else {
               onNotice("3D Video is ready! Click 'Save Video (.MP4)' to download.");
             }
@@ -354,8 +354,8 @@ export function SharePanel({
                 if ((err as DOMException)?.name === "AbortError") return;
               }
             }
-            await saveVideoBlob(blob, fileName);
             toX();
+            onNotice("File sharing not supported on this browser. Click 'Save Video (.MP4)' below to save your file!");
           } else {
             onNotice("3D Video is ready! Click 'Save Video (.MP4)' to download.");
           }

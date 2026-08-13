@@ -13,7 +13,7 @@ export function withHashtag(caption: string) {
   return `${text}\n\n${REQUIRED_HASHTAG}`.trim();
 }
 
-export function buildIntentUrl(caption: string, url = SITE_URL) {
+export function buildIntentUrl(caption: string, url = typeof window !== "undefined" ? window.location.origin : SITE_URL) {
   const params = new URLSearchParams({ text: withHashtag(caption), url });
   return `https://x.com/intent/post?${params.toString()}`;
 }
