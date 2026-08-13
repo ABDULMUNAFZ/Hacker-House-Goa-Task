@@ -8,11 +8,18 @@ export function Hero() {
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let ticking = false;
     const onMove = (e: PointerEvent) => {
-      setTilt({
-        x: (e.clientX / window.innerWidth - 0.5) * 18,
-        y: (e.clientY / window.innerHeight - 0.5) * 12,
-      });
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setTilt({
+            x: (e.clientX / window.innerWidth - 0.5) * 18,
+            y: (e.clientY / window.innerHeight - 0.5) * 12,
+          });
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);

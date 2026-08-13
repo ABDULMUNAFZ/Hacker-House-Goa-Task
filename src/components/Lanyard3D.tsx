@@ -359,6 +359,7 @@ function Band({
 
   const prevRecording = useRef(false);
   const recordingStartTime = useRef(0);
+  const lastTextureUpdateRef = useRef(0);
 
   // Synchronize physics positions when anchor coordinates change
   useEffect(() => {
@@ -447,7 +448,10 @@ function Band({
     }
 
     // Live update the texture from the 2D canvas preview
-    if (canvas && compositeCtx) {
+    // Throttle live texture updates to reduce GPU memory bandwidth pressure during scrolling
+    const nowFrame = state.clock.getElapsedTime();
+    if (canvas && compositeCtx && (isRecording || dragged || nowFrame - lastTextureUpdateRef.current > 0.15)) {
+      lastTextureUpdateRef.current = nowFrame;
       const W = compositeCanvas.width;
       const H = compositeCanvas.height;
       

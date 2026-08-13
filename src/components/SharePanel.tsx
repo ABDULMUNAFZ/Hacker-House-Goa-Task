@@ -12,6 +12,7 @@ import {
   shareFile,
   withHashtag,
 } from "@/lib/share";
+import { uploadMediaServer } from "@/lib/uploadServer";
 
 type Props = {
   getCanvas: () => HTMLCanvasElement | null;
@@ -383,26 +384,24 @@ export function SharePanel({
   };
 
   const uploadMedia = async (blob: Blob, name: string): Promise<string> => {
-    const formData = new FormData();
-    formData.append("file", blob, name);
-    
-    const res = await fetch("https://tmpfiles.org/api/v1/upload", {
-      method: "POST",
-      body: formData
+    // Convert blob to base64 string
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        const base64Data = result.split(",")[1];
+        resolve(base64Data);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
     });
-    
-    if (!res.ok) {
-      throw new Error("Upload failed");
+
+    // Invoke server function (bypasses browser CORS restrictions completely!)
+    const res = await uploadMediaServer({ data: { base64, filename: name } });
+    if (!res.success || !res.url) {
+      throw new Error(res.error || "Upload to server failed.");
     }
-    
-    const json = await res.json();
-    if (json.status !== "success" || !json.data?.url) {
-      throw new Error("Invalid response from temporary file server.");
-    }
-    
-    const htmlUrl = json.data.url;
-    const directUrl = htmlUrl.replace("tmpfiles.org/", "tmpfiles.org/dl/");
-    return directUrl;
+    return res.url;
   };
 
   const shareImageToX = async () => {
