@@ -587,6 +587,19 @@ export function SharePanel({
             </span>
           </button>
         )}
+
+        {/* Take it to X */}
+        <button
+          type="button"
+          className="hh-btn hh-btn-primary"
+          onClick={toX}
+          disabled={recordingVideo}
+        >
+          <span className="relative z-10 flex items-center gap-2">
+            <XLogo className="h-4 w-4" aria-hidden="true" />
+            Take it to X
+          </span>
+        </button>
       </div>
 
       <label htmlFor="hh-caption" className="label-cond mt-6 block text-xs sm:text-sm text-goa-yellow font-semibold tracking-wider">
